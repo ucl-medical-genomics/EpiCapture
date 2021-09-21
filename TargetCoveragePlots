@@ -1,0 +1,114 @@
+############################################################################
+#   Title: Epicapture Cumulative Coverage Plot for Hybridization capture
+#   Description: Script used to get coverage histogram from bed files (bedtools) and plot cumulative coverage (R)
+#   Author: Miljana Tanic (m.tanic@ucl.ac.uk) 
+#   Created: September 2019
+#   Last edited: 
+###############################################################################
+
+
+# Setup design files - make sure to use design BED files without 'chr' annotation:
+
+    # Agilent target region
+    AGILENT_BED="/home/regmani@ad.ucl.ac.uk/RDS_C2c/EpiCapture/BEDfiles/AgilentBEDfiles/S03770311/Agilent_Regions_noChr_clean.bed"
+  
+    #Roche target region:
+    ROCHE_BED='/home/pogb.cancer.ucl.ac.uk/regmani/RDS_C2c/EpiCapture/BEDfiles/RocheBEDfiles/130912_HG19_CpGiant_4M_EPI_noChr.bed'
+   
+    # EPIC target region:
+    EPIC_BED='/home/pogb.cancer.ucl.ac.uk/regmani/RDS_C2c/EpiCapture/BEDfiles/EPIC_target_regions_2016_02_26_noChr_clean.bed'
+
+
+# Use bedtools coverage to make a histohram of covarage at specified depth
+
+# get all beadfiles and for each run in parallel bedtool coverage command
+
+# or do in a for loop:
+    # Agilent:
+    for f in *deduplicated.bam; do  bedtools coverage  -hist -b $f -a ~/RDS_C2c/EpiCapture/BEDfiles/AgilentBEDfiles/S03770311/Agilent_Regions_noChr_clean.bed | grep ^all > ${f%%"_R1_val_1_bismark_bt2_pe.deduplicated.bam"}.hist.all.txt; done
+
+    # Roche:
+    for f in *deduplicated.bam; do  bedtools coverage  -hist -b $f -a ~/RDS_C2c/EpiCapture/BEDfiles/RocheBEDfiles/130912_HG19_CpGiant_4M_EPI_noChr.bed | grep ^all > ${f%%"_R1_val_1_bismark_bt2_pe.deduplicated.bam"}.hist.all.txt; done
+
+    # Illumina:
+    for f in *deduplicated.bam; do  bedtools coverage  -hist -b $f -a ~/RDS_C2c/EpiCapture/BEDfiles/IlluminaBEDfiles/EPIC_target_regions_2016_02_26_noChr.bed | grep ^all > ${f%%"_R1_val_1_bismark_bt2_pe.deduplicated.bam"}.hist.all.txt; done
+
+#===========================================================================
+# Now that we have text files with coverage histograms for all the regions in the capture target, we can now plot this using R.
+
+#-------------------------------------------------
+# Make sure to change parameters for each platform
+#-------------------------------------------------
+    # Get a list of the bedtools output files to read in
+    print(files <- list.files(pattern=".hist.all.txt$"))
+
+    # reorder files to follow sample names convention:
+    print(files <- files[c(8:9,10:11,2:3,6:7,15:16,4:5,14,1,13,12)])
+
+
+    # create short sample names from the plot
+    print(labs <- gsub("Roche_", "",files))
+
+
+    print(labs <- gsub(".hist.all.txt" , "", labs))
+
+    # Create lists to hold coverage and cumulative coverage for each alignment, and read the data into these lists
+    cov <- list()
+    cov_cumul <- list()
+    for (i in 1:length(files)) {
+        cov[[i]] <- read.table(files[i])
+        cov_cumul[[i]] <- 1-cumsum(cov[[i]][,5])
+    }
+
+    # Save objects for plotting:
+        save(cov, cov_cumul,labs,  file = "/home/regmani@ad.ucl.ac.uk/RDS_C2c/EpiCapture/RESULTS/3_TargetCaptureMetrics/Roche_CovCumul.RData")
+
+    
+    # Set collors: 
+        cols <- c( "#3B9AB2", "#4BA1B7", "#5BA9BC", "#6BB1C1", "#7FB8BA", "#9EBE91", "#BDC367", "#DBC93E", "#E9C824", "#E7C019", "#E4B80E", "#E1B002", "#E49100", "#E86900", "#ED4100", "#F21A00")
+
+
+    # Set platform names for the plot title
+        Agilent="Agilent \n SureSelect MethylSeq"
+        Roche= "Roche \n SeqCap EpiGiant"
+        Illumina="Illumina \n TruSeq Methyl Cature EPIC"
+
+    # Set plotting parameters:
+    # Arrange for 3 plots - 1 per row/ 3 per row
+    #par(mfrow=c(1,1))
+
+
+    # Save the graph to a file
+    #pdf("/home/regmani@ad.ucl.ac.uk/RDS_C2c/EpiCapture/RESULTS/3_TargetCaptureMetrics/agilent-CumulCoverage-plots.pdf", height=5, width=7) # set size in inches 7x5 inches (export pdf)
+
+    # Create plot area, but do not plot anything. 
+    # Plot depths from 1 to 200x (max 1x to 400x)
+    plot(cov[[1]][2:201, 2], cov_cumul[[1]][1:200],
+        type='l', xlab="Depth of coverage", xaxt='n',
+        col=cols[1],
+        ylab="Fraction of capture targets at >= depth",
+        ylim=c(0,1.0),
+        main= Roche)
+
+    # plot x-axis and set vertical lines
+    depth <- c( "5x", "10x", "20x", "30x", "50x", "100x", "200x")
+    x <- c(5,10,20,30,50,100,200)
+    axis(side = 1, at = x, labels = x, cex.axis=0.9, tcl = -0.2)
+    abline(v=x, col="gray60", lty=2)
+    axis(1, at=c(10), labels=c(10), cex.axis=0.9, tcl = -0.2)
+
+    # set horizontal lines
+    abline(h = 0.50, col = "gray60")
+    abline(h = 0.90, col = "gray60")
+    axis(2, at=c(0.90), labels=c(0.90))
+    axis(2, at=c(0.50), labels=c(0.50))
+
+    # Actually plot the data for each of the alignments (stored in the lists).
+    for (i in 1:length(cov)) { 
+    points(cov[[i]][2:201, 2], cov_cumul[[i]][1:200], type='l', lwd=1, col=cols[i])
+    }
+
+    # Add a legend using the nice sample labeles rather than the full filenames.
+    legend("topright", legend=labs, col=cols, lty=1, lwd=1, cex=0.8)
+
+    #dev.off()
