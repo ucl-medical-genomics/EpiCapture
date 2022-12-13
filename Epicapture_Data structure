@@ -1,0 +1,174 @@
+# Data structure:
+
+
+/RDS_mnt					# regmani@ssh.rd.ucl.ac.uk:/rd/live/ritd-ag-project-rd007a-mtani82/
+	/miljana_rsync
+		/run_XX       # raw sequencing data files - original fastq files organized per sequencing run  
+
+
+
+
+/RDS_C2c			/home/regmani@ad.ucl.ac.uk/RDS_C2c/EpiCapture/PLATFORMS/Agilent_SureSelect/meth_extr_ignR2-2		# regmani@ssh.rd.ucl.ac.uk:/rd/live/ritd-ag-project-rd003m-mtani82/
+	
+	/Epicapture
+		/PLATFORMS
+  		/PLATFORM_X               # Name of the Platform
+  			
+  			/fastq_files 		        # Original and merged fastq files  "R1.fastq.gz" and "R2.fastq.gz"
+  			                          # with FASTQC and MultiQC reports
+  			  /originals            # original fastq files - copied from corresponding runs
+  			  /merged               # Merged fastq files for each sample
+  			  
+  			/trimmed                # trimmed fastq files: "_R1_val_1.fq.gz" and "_R2_val_2.fq.gz",
+  			                        # with with FASTQC and MultiQC reports
+  			/bismark                # PE aligned bam files: "_val_1_bismark_bt2_pe.bam"
+  			
+  			/deduplicated           # deduplicated bam files - unsorted (sorted by read name): "_val_1_bismark_bt2_pe.deduplicated.bam"
+  			                        # deduplicated bam files - sorted by Chromosome: "_val_1_bismark_bt2_pe.deduplicated.sorted.bam"
+  			                        # indexed dedup. chr-sorted bam files: "_R1_val_1_bismark_bt2_pe.deduplicated.sorted.bam.bai"
+  			/target_coverage                        
+  			                        # Picard Target coverage metrics files: 
+  			                        # "_R1_val_1_bismark_bt2_pe.deduplicated.sorted_per_target_coverage.txt"
+  			                        # "_R1_val_1_bismark_bt2_pe.deduplicated.sorted_picard_alignment_metrics.txt"
+  			                        # "_R1_val_1_bismark_bt2_pe.deduplicated.sorted_hs_metrics.txt"
+  			                        # "_R1_val_1_bismark_bt2_pe.deduplicated.sorted_bam_header.txt"
+  			                        # "_CpG.txt"
+  			                        # "REPORT_PLATFORM_X_HsMetrics_Picard.txt"
+         
+  			/QC_Reports             # all qc reports for MultiQC
+  			
+  			/bedGraphs_Coverage     # sufix:
+			  			 		# "_R1_val_1_bismark_bt2_pe.deduplicated.bedGraph"
+                                # "_val_1_bismark_bt2_pe.deduplicated.bismark.cov"
+								# "_val_1_bismark_bt2_pe.deduplicated.bismark.CpG_report.merged_CpG_evidence.cov"
+								# "_R1_val_1_bismark_bt2_pe.deduplicated.bismark.CpG_report.txt"
+  			
+  			
+  			
+  			/meth_extracted        # not yet -currwntly 2 folder as below           
+  			  /meth_extr_ignR2-2_strand.spec  # M-bias : "_R1_val_1_bismark_bt2_pe.deduplicated.M-bias.txt"
+  			                                  # report: "_R1_val_1_bismark_bt2_pe.deduplicated_splitting_report.txt
+  			                                  # MultiQC report
+  			                                  # sufix: "_R1_val_1_bismark_bt2_pe.deduplicated.txt.gz"
+  			                                  # prefix: "CpG_OT_", "CpG_OB_", "CHG_OT_", "CHG_OB_", "CHH_OT_", "CHG_OB_"
+  			                                  
+  			   /meth_extr_ignR2-2             # sufix: "_R1_val_1_bismark_bt2_pe.deduplicated.txt.gz"
+  			                                  # pefix: "CpG_context_" and "Non_CpG_context_"
+  		 	                                  
+  			                                  
+#------------------			                                  
+# File description:			                                  
+#------------------			            
+			            
+# Bismark BAM/SAM output (default):
+
+  # reported quality values are encoded in Sanger format (Phred 33 scale), even if the input was in Phred64 or the old Solexa format.
+
+	1     QNAME (seq-ID)
+	2     FLAG (alignment strand - this is different from ordinary DNA alignment flags!))
+	3     RNAME (chromosome)
+	4     POS (start position)
+	5     MAPQ (only calculated for Bowtie 2, always 255 for Bowtie)
+	6     CIGAR
+	7     RNEXT
+	8     PNEXT
+	9     TLEN
+	10    SEQ
+	11    QUAL (Phred33 scale)
+	12    NM-tag (edit distance to the reference)
+	13    MD-tag (base-by-base mismatches to the reference) (14) XM-tag (methylation call string)
+	14    XR-tag (read conversion state for the alignment) (16) XG-tag (genome conversion state for the alignment)
+			        
+	# The paired-end output looks like this (1 line per sequence pair, tab separated):
+		1     seq-ID
+		2     alignment strand
+		3     chromosome
+		4     start
+		5     end
+		6     original bisulfite read sequence 1
+		7     equivalent genomic sequence 1 (+2 extra bp) 
+		8     methylation call string 1
+		9     original bisulfite read sequence 2
+		10    equivalent genomic sequence 2 (+2 extra bp) 
+		11    methylation call string 2
+		12    read 1 conversion
+		13    genome conversion
+		14    read 1 quality score (Phred33 scale)
+		15    read 2 quality score (Phred33 scale)
+
+		# Paired-end alignment example
+		1     HWUSI-EAS611_100205:2:1:13:1732#0
+		2     +
+		3     14
+		4     62880539
+		5     62880652
+		6     CGGGATTTCGCGGAGTACGGGTGATCGTGTGGAATATAGA
+		7     CGGGACTCCGCGGAGCACGGGTGACCGTGTGGAATACAGAGT
+		8     Z....h.xZ.Z....h.Z......xZ..........x...
+		9     CAACTATCTAAAACTAAAAATAACGCCGCCCAAAAACTCT
+		10    TCCGGCTGTCTGGAGCTGAAGATGGCGCCGCCCAGAAGCTCT
+		11    .zx..x...xh.h..x..h..hh.Z..Z....x..h....
+		12    CT
+		13    CT
+		14    IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+		15    IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII			        
+			        
+			            
+			            
+# Methylation extraction examples for cytosines in CpG context
+	 "_R1_val_1_bismark_bt2_pe.deduplicated.txt.gz"
+	<seq-ID> <methylation state> <chromosome> <start position(= end position)> <methylation call>
+	HWUSI-EAS611_0006:3:1:1058:15806#0/1 - 6 91793279 z
+	HWUSI-EAS611_0006:3:1:1058:17564#0/1 + 8 122855484 Z			            
+			            
+			            
+			            
+# Coverage file (using 1-based genomic genomic coordinates): 
+	"_R1_val_1_bismark_bt2_pe.deduplicated.bismark.cov"
+	<chromosome> <start position> <end position> <methylation percentage> <count methylated> <count unmethylated>	
+	7       20353   20353   100     1       0
+	7       20416   20416   0       0       1
+	7       23991   23991   0       0       3
+	7       24023   24023   71.4285714285714        5       2
+
+	# start = end 
+	# info on C methylation - for both strands separately
+	# use for IGV
+
+# merged CpG evidence coverage file (new)
+
+	"_R1_val_1_bismark_bt2_pe.deduplicated.bismark.CpG_report.merged_CpG_evidence.cov"
+
+	7       20352   20353   100.000000      1       0
+	7       20415   20416   0.000000        0       1
+	7       23991   23992   0.000000        0       3
+	7       24023   24024   81.818182       9       2
+
+			                                  
+# bedGraph (uses 0-based genomic start and 1- based end coordinates):
+	"_R1_val_1_bismark_bt2_pe.deduplicated.bedGraph":			             <chromosome> <start position> <end position> <methylation percentage>		track type=bedGraph
+	7       20352   20353   100
+	7       20415   20416   0
+	7       23990   23991   0                                
+
+
+			                                  
+# Genome-wide CpG coverage (using 1-based genomic genomic coordinates):
+ "_val_1_bismark_bt2_pe.deduplicated.bismark.CpG_report.txt"
+	<chromosome> <position> <strand> <count methylated> <count unmethylated> <C-context> <trinucleotide context>
+	7       10301   +       0       0       CG      CGA
+	7       10302   -       0       0       CG      CGC
+	7       10479   +       0       0       CG      CGT
+	7       10480   -       0       0       CG      CGT
+
+
+
+    # genome-wide CpG report (old)
+    gi|9626372|ref|NC_001422.1|     157     +       313     156     CG
+    gi|9626372|ref|NC_001422.1|     158     -       335     156     CG
+    
+     gi|9626372|ref|NC_001422.1|     157     158     67.500000       648     312
+
+# data for the M-bias plot is also written into a coverage text file (ending in .cov or .cov.gz) and is in the following format:
+  <read position> <count methylated> <count unmethylated> <% methylation> <total coverage>			                                  
+
