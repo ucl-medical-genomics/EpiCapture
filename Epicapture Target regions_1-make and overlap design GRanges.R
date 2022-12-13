@@ -8,7 +8,6 @@
 
 #####################################################################################
 
-# !!! If packages, commands or something doesn't work - disconect from the  server and reconect, it will usually "miracolously" start working!
 
 #=========================================
 # Load libraries and set working directory
